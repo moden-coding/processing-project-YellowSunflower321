@@ -20,23 +20,25 @@ public class App extends PApplet{
     float g = random(0,255);
     float b = random(0,255);
 
-    float xCar = 10; //starting coordinates of car
+    float xCar = -100; //starting coordinates of car
     float yCar = 310;
 
-    boolean GameOver = false; //whether or not chicken is dead (game over)
+    // boolean GameOver = false; //whether or not chicken is dead (game over)
 
-    // int waitTime = 2000; //2 seconds (ChatGPT)
-    // int startTime;
+    int waitTime = 2000; //2 seconds (ChatGPT)
+    int lastCarTime = 0;
+    int startTime = 4000;
 
-    boolean spaceClicked = false; 
+
+    boolean startText = false; 
 
     public static void main(String[] args)  {
         PApplet.main("App");
     }
 
     public void setup(){
-        // startTime = millis();
-        // textSize(32);
+        startTime = millis();
+        textSize(32);
 
     }
 
@@ -45,10 +47,13 @@ public class App extends PApplet{
 
     }
 
+
+
+    
+
     public void draw(){
         background(10,150,100);
 
-        
         fill(200,200,200); //First road
         stroke(0,0,0);
         strokeWeight(4);
@@ -74,46 +79,39 @@ public class App extends PApplet{
         strokeWeight(4);
         ellipse(xChicken,yChicken,55,55);
 
-        while(spaceClicked==false){ //print text until space clicked
-            text("Click the spacebar to start.", 210,270);
+        if((millis()-lastCarTime)>waitTime){
+            xCar=-100;
+            lastCarTime=millis();
         }
-
+        fill(r,b,g);
+        rect(xCar,yCar,rectWidth,rectHeight);
+        xCar += speedCar;
        
-
-        // check edges and reverse direction
-        // if (x + rectWidth / 2 >= width || x - rectWidth / 2 <= 0) {
-        //     speedChicken *= -1;  // flip direction
-        // }
-        if(yChicken==0){ //moves chicken back to start after reaching top
+        if(yChicken<=0){ //moves chicken back to start after reaching top
             xChicken=400;
             yChicken=500;
         }
+        if(startText=false){
+            fill(255,255,255);
+            text("Click the spacebar to start.", 210,270);
+        }
 
-        // while(GameOver==false){ //cars continue to come
-        //     fill(r,b,g);
-        //     rect(xCar, yCar, rectWidth, rectHeight);
-        //     xCar += speedCar; //moves car to the right
-        //     millis(); //wait two seconds (ChatGPT)            
-        // }
-        // if (millis() - startTime < waitTime) {
-        //     fill(0);
-        //     text("Waiting...", 150, 200);
-        // } else {
-        //     fill(0);
-        //     text("Done waiting!", 150, 200);
-        // }
+        }
 
-    }
     public void keyPressed(){
         if (keyCode == UP) {
             yChicken -= speedChicken;   // move up chicken
     }
+        if (keyCode == LEFT){
+            xChicken -= speedChicken;
+        }
+        if (keyCode == RIGHT){
+            xChicken += speedChicken;
+        }
+        if (keyCode == ' '){
+            startText=true;
+        }
 
 }
-    public void mousePressed(){
-        if(mousePressed){
-            spaceClicked = true;
-        }
-    }
 
 }
