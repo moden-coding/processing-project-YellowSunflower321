@@ -2,17 +2,18 @@ import java.util.ArrayList;
 
 
 import processing.core.*;
+import processing.sound.*;
+
+
 
 
 //Music starts when space clicked + train sound
-//Make a countdown
+//Make cars come on eaerlier to remove gap
 //Add more comments
 //Mystery coin: can make you go back to the start
 //Level coin: you gain a life
 //Time coin: you gain time
 //Two characters at the same time
-//add instructions for keys to use for each character (appear until key is clicked)
-//take away enter to start
 
 
 
@@ -25,31 +26,24 @@ int scene = 1; //Welcome page/scene
 
 //IMAGES
 PImage imageChicken; //image of chicken
-PImage imageHawk; //image of hawk
-PImage imageDuck; //image of duck
-PImage imageTitle; //image of crossy road title
+PImage imageHawk; //image of Hawk
+
+
+//SOUND
+SoundFile trainSound;
+boolean playTrainSound = false;
+
 
 
 //CHICKEN
    float xChicken = 400;  // starting x,y positions of chicken
    float yChicken = 550;
    float speedChicken = 5; // Chicken speed/movemet
-   boolean leftChicken, rightChicken, upChicken, downChicken;
+   boolean left, right, up, down;
 
 
-   int livesChicken = 3;
-   int levelChicken = 1;
-
-
-//DUCK
-   float xDuck = 400;  // starting x,y positions of chicken
-   float yDuck = 550;
-   float speedDuck = 5; // Duck speed/movemet
-   boolean leftDuck, rightDuck, upDuck, downDuck;
-
-
-   int livesDuck = 3;
-   int levelDuck = 1;
+   int lives = 3;
+   int level = 1;
 
 
 
@@ -135,10 +129,6 @@ ArrayList<Integer> colorListRight = new ArrayList<Integer>();
    int speedHawk=4;
 
 
-//MULTIPLAYER:
-   boolean multiPlayer=false;
-
-
 
 
 
@@ -149,13 +139,13 @@ ArrayList<Integer> colorListRight = new ArrayList<Integer>();
 
 
    public void setup(){
-       lastTrainTime=millis();        
-        textSize(32);
+       lastTrainTime=millis();        textSize(32);
        //loads images
        imageChicken = loadImage("CrossyRoadCharacter3.png");
        imageHawk = loadImage("Hawk.png");
-       imageDuck = loadImage("Duck.png");
-       imageTitle = loadImage("Title.png");
+       trainSound = new SoundFile(this, "trainSound.mp3"); //load train sound
+
+
    }
 
 
@@ -171,38 +161,19 @@ ArrayList<Integer> colorListRight = new ArrayList<Integer>();
        background(200,225,230);
        imageMode(CORNER); //sets chicken back same place each time
           
-           // noStroke();
-           // fill(10,150,100);
-           // rect(290,150,200,80);
-           // fill(290,150,200,80);
-           // text("Crossy Road", 305, 200);
+           noStroke();
+           fill(230,100,20);
+           rect(290,150,200,80);
+           fill(255,255,255);
+           text("Crossy Road", 305, 200);
            image(imageChicken, 320, 360, 180, 200); //Image of chicken
-           image(imageTitle, 230, 50, 350, 200); //Image of Crossy Road title
-
-
 
 
 
 
            fill(0,0,0);
-           text("Welcome!",325,300);
+           text("Please click enter to start.",220,300);
            text("Use the arrow keys to move your character.", 100,340);
-
-
-           //multiplayer button
-           noStroke();
-           fill(255);
-           rect(80,380,200,80);
-           fill(230,100,20);
-           text("Multiplayer", 100, 430);
-
-
-           //singleplayer button
-           noStroke();
-           fill(230,100,20);
-           rect(530,380,200,80);
-           fill(255);
-           text("Singleplayer", 550, 430);
 
 
 
@@ -254,17 +225,17 @@ ArrayList<Integer> colorListRight = new ArrayList<Integer>();
 
 // LEVEL, LIVES, & TIMER TEXT:
        fill(0,0,0);
-       text("Lives = " + livesChicken, 660, 540);
-       text("Level = " + levelChicken, 660, 580);
+       text("Lives = " + lives, 660, 540);
+       text("Level = " + level, 660, 580);
        text("Time = " + timer + " seconds", 20, 580);
        if(startTimer==true){
            timer=(millis()-timerStart)/1000;
        }
   
 //Time limit warning
-   if(levelChicken>=3){
+   if(level>=3){
        fill(255);
-       text("You only have " + timeLimit + " seconds to complete Level " + levelChicken, 75, 310);
+       text("You only have " + timeLimit + " seconds to complete Level " + level, 75, 310);
    }
 
 
@@ -273,31 +244,26 @@ ArrayList<Integer> colorListRight = new ArrayList<Integer>();
        image(imageChicken, xChicken, yChicken, 45, 50); // width and height can be adjusted
 
 
-       if(yChicken<=0 && levelChicken<=4){ //moves chicken back to start after reaching top
-           scene=4; //game over scene
-           if(multiPlayer==true){
-               xChicken=300;
-               yChicken=500;
-           } else{
+       if(yChicken<=0 && level<=4){ //moves chicken back to start after reaching top
+           scene=4;
            xChicken=400;
            yChicken=500;
-           }
-       } else if(yChicken<=0 && levelChicken>=5){
-           scene=5; //Switches to "you won" screen after last level
+       } else if(yChicken<=0 && level>=5){ //Switches to "you won" screen after last level
+           scene=5;
        }
 
 
    //Smooth movement of chicken:
-       if(leftChicken==true){
+       if(left==true){
            xChicken -=speedChicken;
        }
-       if(rightChicken==true){
+       if(right==true){
            xChicken +=speedChicken;
        }
-       if(upChicken==true){
+       if(up==true){
            yChicken -=speedChicken;
        }
-       if(downChicken==true){
+       if(down==true){
            yChicken +=speedChicken;
        }
 
@@ -305,21 +271,14 @@ ArrayList<Integer> colorListRight = new ArrayList<Integer>();
 //Reset chicken placement
        if(yChicken>=600 || xChicken<=0 || xChicken>=800){ //if chicken touches edge
            GameOver=true;
-           if(multiPlayer==true){
-               xChicken = 300;
-               yChicken = 550;
-               xDuck = 400;
-               yDuck = 550;
-           } else{
            xChicken = 400;  // starting x position of chicken
            yChicken = 550;
-           }
            scene=3;
        }
 
 
 //HAWK MOVEMENT:
-if(levelChicken>=3 && OutOfTime==true){
+if(level>=3 && OutOfTime==true){
    image(imageHawk, xHawk,yChicken, 50,50);
    xHawk+=speedHawk;
    if(xHawk>=810);
@@ -330,31 +289,12 @@ if(levelChicken>=3 && OutOfTime==true){
 }
 
 
-//MULTIPLAYER MODE: DUCK!
-if(multiPlayer==true){
-   image(imageDuck, xDuck, yDuck, 35, 40); //Image of duck
-
-
-//Smooth movement of chicken:
-       if(leftDuck==true){
-           xDuck -=speedDuck;
-       }
-       if(rightDuck==true){
-           xDuck +=speedDuck;
-       }
-       if(upDuck==true){
-           yDuck -=speedDuck;
-       }
-       if(downDuck==true){
-           yDuck +=speedDuck;
-       }
-   }
 
 
 
 
 //LEVELS!
-   if(levelChicken==1){
+   if(level==1){
        carsDriveByLeft(-30,380,2, bottomLeftTimer,carWaitTimeBottomLeft);
        carsDriveByRight(830, 440, 2, bottomRightTimer, carWaitTimeBottomRight);
 
@@ -363,14 +303,14 @@ if(multiPlayer==true){
        carsDriveByRight(830,80,2, topRightTimer, carWaitTimeTopRight);
 
 
-   } else if(levelChicken==2){
+   } else if(level==2){
        carsDriveByLeft(-30,380,3, bottomLeftTimer,carWaitTimeBottomLeft); // cars speed up
        carsDriveByRight(830, 440,3, bottomRightTimer, carWaitTimeBottomRight);
 
 
        carsDriveByLeft(-30,20,3, topLeftTimer, carWaitTimeTopLeft);
        carsDriveByRight(830,80,3, topRightTimer, carWaitTimeTopRight);
-   } else if(levelChicken==3){
+   } else if(level==3){
        carsDriveByLeft(-30,380,4, bottomLeftTimer,carWaitTimeBottomLeft); //cars speed up
        carsDriveByRight(830, 440,4, bottomRightTimer, carWaitTimeBottomRight);
 
@@ -389,7 +329,7 @@ if(multiPlayer==true){
       
 
 
-   } else if(levelChicken==4){
+   } else if(level==4){
        carsDriveByLeft(-30,380,2, bottomLeftTimer,carWaitTimeBottomLeft); //timer starts
        carsDriveByRight(830, 440, 2, bottomRightTimer, carWaitTimeBottomRight);
 
@@ -407,7 +347,7 @@ if(multiPlayer==true){
        }
 
 
-   } else if(levelChicken==5){
+   } else if(level==5){
        carsDriveByLeft(-30,380,3, bottomLeftTimer,carWaitTimeBottomLeft);
        carsDriveByRight(830, 440, 3, bottomRightTimer, carWaitTimeBottomRight);
 
@@ -422,7 +362,7 @@ if(multiPlayer==true){
            GameOver=true;
            scene=3;
            }
-       }else if(levelChicken==6){
+       }else if(level==6){
        scene=5;
    }
 }
@@ -449,10 +389,21 @@ if((millis()-lastTrainTime)>(trainWaitTime-3000) && (millis() - lastTrainTime) <
        rTrain=200;
        gTrain=15;
        bTrain=15;
+       playTrainSound=true;
+
 } else{
        rTrain=0;
        gTrain=0;
        bTrain=0;
+       playTrainSound=false;
+
+
+}
+
+    if((millis()-lastTrainTime)==(trainWaitTime-3000)){
+        float volume = 2/10;
+       trainSound.amp(volume);
+       trainSound.play();
 }
 
 
@@ -472,16 +423,16 @@ if((millis()-lastTrainTime)>trainWaitTime){
 else if(scene==3){
    background(150,50,50);
    fill(255);
-   if((livesChicken-1)==0){
+   if((lives-1)==0){
        text("Game over.", 310, 300);
        text("Your Time: " + timer + " sec", 280, 440);
-       levelChicken=1; //Start again at level 1
+       level=1; //Start again at level 1
        restart=true;
        } else{
-       if(livesChicken==2){
-           text("You have " + (livesChicken-1) + " life left. Try Again!",180,300);
+       if(lives==2){
+           text("You have " + (lives-1) + " life left. Try Again!",180,300);
        } else{
-           text("You have " + (livesChicken-1) + " lives left. Try Again!",180,300);
+           text("You have " + (lives-1) + " lives left. Try Again!",180,300);
        }
        restart=false;
 
@@ -536,7 +487,7 @@ else if(scene==3){
        yListRight.clear();
        speedListRight.clear();
        colorListRight.clear();
-   livesChicken=3; //reset the lives
+   lives=3; //reset the lives
    text("Your Time: " + timer + " seconds", 250, 440);
        if(timer<HighScore){
            HighScore=timer;
@@ -548,11 +499,10 @@ else if(scene==3){
        }else{
        text("High Score: " + HighScore + " seconds", 240, 490);
        }
-  
    image(imageChicken, 400, 150, 180, 200); //Image of chicken
    xChicken = 400;  // restart x and y positions of chicken
    yChicken = 550;
-   timerStart=millis(); //Counting seconds from start
+   timerStart=millis();
 
 
 
@@ -572,8 +522,8 @@ else if(scene==3){
    text("You WON the Game!", 270, 300);
    image(imageChicken, 400, 480, 180, 200); //Image of chicken
    text("Click the spacebar to return home", 200, 360);
-   livesChicken=3; //reset lives and level;
-   levelChicken=1;
+   lives=3; //reset lives and level;
+   level=1;
 }
 
 
@@ -587,37 +537,25 @@ else if(scene==3){
 
 
    public void keyPressed(){
+       if (keyCode == ENTER && scene==1){
+           scene++;
+           startTimer=true;
+           timerStart = millis();  // start the timer
 
+
+       }
        if(OutOfTime==false){
            if(keyCode==LEFT){
-               leftChicken = true;
+               left = true;
            }
           if(keyCode==RIGHT){
-               rightChicken = true;
+               right = true;
            }
            if(keyCode==UP){
-               upChicken = true;
+               up = true;
            }
            if(keyCode==DOWN){
-               downChicken = true;
-           }
-
-
-           if(multiPlayer==true){ //multiplayer mode uses A,W,D to move duck
-               if(keyCode=='a'){
-                   leftDuck=true;
-               }
-               if(keyCode=='d'){
-                   rightDuck=true;
-               }
-               if(keyCode=='w'){
-                   upDuck=true;
-               }
-               if(keyCode=='s'){
-                   downDuck=true;
-               }
-
-
+               down = true;
            }
        }
       
@@ -644,32 +582,18 @@ else if(scene==3){
 
    public void keyReleased(){
   
-   if(OutOfTime==false){ //if the chicken is not out of time
+       if(OutOfTime==false){
        if(keyCode==LEFT){
-           leftChicken = false;
+           left = false;
        }
        if(keyCode==RIGHT){
-           rightChicken = false;
+           right = false;
        }
        if(keyCode==UP){
-           upChicken = false;
+           up = false;
        }
        if(keyCode==DOWN){
-           downChicken = false;
-       }
-       if(multiPlayer==true){
-       if(keyCode=='a'){
-           leftDuck = false;
-       }
-       if(keyCode=='d'){
-           rightDuck = false;
-       }
-       if(keyCode=='w'){
-           upDuck = false;
-       }
-       if(keyCode=='s'){
-           downDuck = false;
-       }
+           down = false;
        }
    }
    }
@@ -680,9 +604,9 @@ else if(scene==3){
            if(mouseX>310 && mouseX<470 && mouseY>330 && mouseY<380){ //Play Again button is pressed
                scene=2; //Back to crossy road
                if(restart==true){
-                   livesChicken=3; //Resets lives
+                   lives=3; //Resets lives
                }else{
-               livesChicken=livesChicken-1; //Otherwise life lost
+               lives=lives-1; //Otherwise life lost
                }
               
            }
@@ -690,30 +614,14 @@ else if(scene==3){
 
 
        if(scene==4){//You Passed Page
-           if(mouseX>310 && mouseX<470 && mouseY>330 && mouseY<380 && levelChicken<=5){ //Next Level button is pressed
+           if(mouseX>310 && mouseX<470 && mouseY>330 && mouseY<380 && level<=5){ //Next Level button is pressed
                scene=2; //Back to crossy road
-               levelChicken++;
+               level++;
            }
        }
 
 
-       if(scene==1){
-           if(mouseX>80 && mouseX<280 && mouseY>380 && mouseY<460){ //multiplayer button is pressed
-               multiPlayer=true; //turn on multiplayer version
-               scene=2; //go to game page
-                startTimer=true;
-                timerStart = millis();  // start the timer
-           } else if(mouseX>530 && mouseX<730 && mouseY>380 && mouseY<460){ //singleplayer button is pressed
-               scene=2; //go to game page
-               multiPlayer=false;
-                    startTimer=true;
-                timerStart = millis();  // start the timer
-           }
-
-
- 
    }
-}
 
 
 //METHOD ON CARS DRIVING BY FROM LEFT:
