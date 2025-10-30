@@ -31,7 +31,9 @@ PImage imageHawk; //image of Hawk
 
 //SOUND
 SoundFile trainSound;
-boolean playTrainSound = false;
+boolean playTrainSound = false; //train sound starts off
+SoundFile music;
+boolean playMusic = false; //music starts off
 
 
 
@@ -144,6 +146,8 @@ ArrayList<Integer> colorListRight = new ArrayList<Integer>();
        imageChicken = loadImage("CrossyRoadCharacter3.png");
        imageHawk = loadImage("Hawk.png");
        trainSound = new SoundFile(this, "trainSound.mp3"); //load train sound
+       music = new SoundFile(this, "music.mp3");
+
 
 
    }
@@ -155,6 +159,10 @@ ArrayList<Integer> colorListRight = new ArrayList<Integer>();
 
 
    public void draw(){
+
+    if(playMusic==true){
+        music.play();
+    }
 
 
    if(scene==1){ //Welcome page
@@ -386,10 +394,17 @@ if(checkOverlap()==true){
 
 //TRAIN movement:
 if((millis()-lastTrainTime)>(trainWaitTime-3000) && (millis() - lastTrainTime) < (trainWaitTime + 3000)){ //If train is 3 seconds away, light turns red
-       rTrain=200;
+       
+    rTrain=200;
        gTrain=15;
        bTrain=15;
+       if(!playTrainSound){ //play train sound effect if red light comes on
+        float volume = 2/10;
+       trainSound.amp(volume);
+       trainSound.play();
        playTrainSound=true;
+}
+
 
 } else{
        rTrain=0;
@@ -400,11 +415,7 @@ if((millis()-lastTrainTime)>(trainWaitTime-3000) && (millis() - lastTrainTime) <
 
 }
 
-    if((millis()-lastTrainTime)==(trainWaitTime-3000)){
-        float volume = 2/10;
-       trainSound.amp(volume);
-       trainSound.play();
-}
+
 
 
 if((millis()-lastTrainTime)>trainWaitTime){
@@ -541,6 +552,8 @@ else if(scene==3){
            scene++;
            startTimer=true;
            timerStart = millis();  // start the timer
+            playMusic=true;
+
 
 
        }
